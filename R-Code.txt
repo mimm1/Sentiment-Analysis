@@ -1,0 +1,132 @@
+01-4c-ls5pk9a\udadmin
+Intel123
+
+
+library(twitteR)
+library(httr)
+library(ROAuth)
+library(RCurl)
+library(openssl)
+library(ggplot2)
+library(plyr)
+library(stringr)
+
+api_key <- "f30PcXpDm8hB3OKxm4skXUI8N"
+api_secret <- "6HcG2EJsIzYlimJGC92clE1pwVjng20ikoXmx8ECmwbEGGO2zu"
+access_token <- "942996082103144449-DiHygPx9a2pONmoaJGjpc9s5h95sYbt"
+access_token_secret <- "UV32PVnvErmainKTxPtpgoGJrJV0Xh4e84dwJ4C02Nxfq"
+setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+
+WomenDriving.list <- searchTwitter('Women+Driving+Saudi', n=1000)
+WomenDriving_ar.list <- searchTwitter('ÞíÇÏÉ+ÇáãÑÃÉ+ÓÚæÏíå', n=1000)
+ 
+#twListToDF() will take a list of objects from a single twitteR class and return a data.frame version of the members
+WomenDriving.df =twListToDF(WomenDriving.list)
+WomenDriving_ar.df =twListToDF(WomenDriving_ar.list)
+
+write.csv(WomenDriving_ar.df, file='c:/test/WomenDriving_Ar.csv', row.names=F)
+write.csv(WomenDriving.df, file='c:/test/WomenDriving.csv', row.names=F)
+
+#The sentiment analysis uses two packages plyr and stringr to manipulate strings. 
+ 
+score.sentiment= function(sentence, pos.words, neg.words, .progress='none')
+{
+  require(plyr)
+  require(stringr)
+   
+  scores= laply(sentence, function(sentence, pos.words, neg.words){
+    sentence = gsub('[[:punct:]]', '', sentence)
+    sentence = gsub('[[:cntrl:]]', '', sentence)
+    sentence = gsub('\\d+', '', sentence)
+     
+    sentence = tolower(sentence)
+     
+    word.list = str_split(sentence, '\\s+')
+     
+    words = unlist(word.list)
+     
+    pos.matches = match(words, pos.words)
+    neg.matches = match(words, neg.words)
+     
+    pos.matches = !is.na(pos.matches)
+    neg.matches = !is.na(neg.matches)
+     
+    score = sum(pos.matches) - sum(neg.matches)
+    return(score)
+  }, pos.words, neg.words, .progress=.progress)
+  scores.df = data.frame(score=scores, text=sentence)
+  return(scores.df)
+}
+ 
+#scoring tweets and adding column
+en.pos = scan('c:/test/positive-words.txt', what='character', comment.char = ';')
+en.neg = scan('c:/test/negative-words.txt', what='character', comment.char = ';')
+ar.pos = scan('c:/test/positive-words_ar.txt', what='character', comment.char = ';')
+ar.neg = scan('c:/test/negative-words_ar.txt', what='character', comment.char = ';')
+ 
+#import the csv file english
+DatasetWomenDriving <- read.csv("C:/test/WomenDriving.csv")
+DatasetWomenDriving$text <- as.factor(DatasetWomenDriving$text)
+#import the csv file english
+DatasetWomenDriving_ar <- read.csv("C:/test/WomenDriving_ar.csv")
+DatasetWomenDriving_ar$text <- as.factor(DatasetWomenDriving_ar$text)
+ 
+#score all tweets
+WomenDriving.scores = score.sentiment(DatasetWomenDriving$text, en.pos, en.neg, .progress = 'text')
+WomenDriving_ar.scores = score.sentiment(DatasetWomenDriving_ar$text, ar.pos, ar.neg, .progress = 'text')
+path <- "c:/test/"
+write.csv(WomenDriving.scores, file=paste(path, "WomenDrivingScores.csv", sep=""), row.names=TRUE)
+write.csv(WomenDriving_ar.scores, file=paste(path, "WomenDrivingScores_ar.csv", sep=""), row.names=TRUE)
+View(WomenDriving.scores)
+View(WomenDriving_ar.scores)
+ 
+#Visualizing the tweets
+ 
+hist(WomenDriving.scores$score, xlab="Score of Tweets", col="red")
+
+ 
+qplot(WomenDriving.scores$score, xlab = "Score of Tweets")
+
+data=data.frame(WomenDriving.scores$score,WomenDriving_ar.scores$score)
+
+# create a dataset
+
+specie=c(rep("-3" , 2) ,rep("-2" , 2) , rep("-1" , 2) , rep("0" , 2) , rep("1" , 2), rep("2" , 2), rep("3" , 2) )
+condition=rep(c("English" , "Arabic") , 7)
+value=abs(rnorm(12 , 0 , 15))
+data=data.frame(specie,condition,value)
+
+ggplot(data, aes(fill=condition, y=value, x=specie)) + geom_bar(position="dodge", stat="identity") + 
+scale_fill_manual("legend", values = data("English" = "green", "Arabic" = "red"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+specie=c(rep("sorgho" , 3) , rep("poacee" , 3) , rep("banana" , 3) , rep("triticum" , 3) )
+
+condition=rep(c("normal" , "stress" , "Nitrogen") , 4)    
+value=abs(rnorm(12 , 0 , 15))
+data=data.frame(specie,condition,value)
+
+ggplot(data, aes(fill=condition, y=value, x=specie)) + geom_bar(position="dodge", stat="identity")
+
+Translate
+---------
+install.packages("RYandexTranslate")
+library(RYandexTranslate)
+api_key="trnsl.1.1.20171221T091638Z.f5b4a932d4f4b808.811e3ab212037f855f63750ac7e2005581140815"
+data=translate(api_key,"how are you?",lang="en-hi")
+
+
+
